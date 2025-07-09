@@ -318,9 +318,9 @@ class TestCollectTrackData:
         route_section_refs = ["section1"]
         link_refs = ["link1"]
         expected_routes = [
-            {"longitude": -0.5547295018806796, "latitude": 51.68985877207877},
+            {"longitude": -0.554729502, "latitude": 51.689858772},
             {"longitude": 1.1111, "latitude": 2.2222},
-            {"latitude": 52.56106230121335, "longitude": 0.9491520443944964},
+            {"latitude": 52.561062301, "longitude": 0.949152044},
             {"longitude": 3.3333, "latitude": 4.4444},
         ]
 
@@ -360,7 +360,7 @@ class TestCollectTrackData:
         route_section_refs = ["section1"]
         link_refs = ["link1"]
         expected_routes = [
-            {"longitude": -0.5547295018806796, "latitude": 51.68985877207877},
+            {"longitude": -0.554729502, "latitude": 51.689858772},
             {"longitude": 1.1111, "latitude": 2.2222},
         ]
 
