@@ -284,7 +284,7 @@ class TestDataCollectionFunctionality:
 
 
 class TestCollectTrackData:
-    def test_convert_easting_northing_to_long_lat_when_missing_in_location(self):
+    def test_convert_easting_northing_to_long_lat_when_missing(self):
         route_sections = [
             {
                 "@id": "section1",
@@ -318,49 +318,10 @@ class TestCollectTrackData:
         route_section_refs = ["section1"]
         link_refs = ["link1"]
         expected_routes = [
-            {"longitude": -0.554729502, "latitude": 51.689858772},
+            {"longitude": -0.5547295018806796, "latitude": 51.68985877207877},
             {"longitude": 1.1111, "latitude": 2.2222},
-            {"latitude": 52.561062301, "longitude": 0.949152044},
+            {"latitude": 52.56106230121335, "longitude": 0.9491520443944964},
             {"longitude": 3.3333, "latitude": 4.4444},
-        ]
-
-        result = collect_track_data(route_sections, route_section_refs, link_refs)
-        assert result == expected_routes
-
-    def test_easting_northing_converted_if_long_lat_not_present_in_translation(self):
-        route_sections = [
-            {
-                "@id": "section1",
-                "RouteLink": [
-                    {
-                        "@id": "link1",
-                        "Track": {
-                            "Mapping": {
-                                "Location": [
-                                    {
-                                        "Translation": {
-                                            "Easting": 500000,
-                                            "Northing": 200000,
-                                        }
-                                    },
-                                    {
-                                        "Translation": {
-                                            "Longitude": 1.1111,
-                                            "Latitude": 2.2222,
-                                        }
-                                    },
-                                ]
-                            }
-                        },
-                    },
-                ],
-            }
-        ]
-        route_section_refs = ["section1"]
-        link_refs = ["link1"]
-        expected_routes = [
-            {"longitude": -0.554729502, "latitude": 51.689858772},
-            {"longitude": 1.1111, "latitude": 2.2222},
         ]
 
         result = collect_track_data(route_sections, route_section_refs, link_refs)
@@ -399,7 +360,7 @@ class TestCollectTrackData:
         route_section_refs = ["section1"]
         link_refs = ["link1"]
         expected_routes = [
-            {"longitude": -0.554729502, "latitude": 51.689858772},
+            {"longitude": -0.5547295018806796, "latitude": 51.68985877207877},
             {"longitude": 1.1111, "latitude": 2.2222},
         ]
 

@@ -718,14 +718,12 @@ def collect_track_data(route_sections, route_section_refs, link_refs):
                                                                 always_xy=True,
                                                             )
                                                         )
-                                                        longitude, latitude = map(
-                                                            lambda coord: round(
-                                                                coord, 9
-                                                            ),
+                                                        longitude, latitude = (
                                                             transformer.transform(
                                                                 easting, northing
-                                                            ),
+                                                            )
                                                         )
+
                                             else:
                                                 longitude = translation.get(
                                                     "Longitude", None
@@ -757,14 +755,12 @@ def collect_track_data(route_sections, route_section_refs, link_refs):
                                                                 always_xy=True,
                                                             )
                                                         )
-                                                        longitude, latitude = map(
-                                                            lambda coord: round(
-                                                                coord, 9
-                                                            ),
+                                                        longitude, latitude = (
                                                             transformer.transform(
                                                                 easting, northing
-                                                            ),
+                                                            )
                                                         )
+
                                             if (
                                                 longitude is not None
                                                 and latitude is not None
@@ -783,7 +779,7 @@ def collect_track_data(route_sections, route_section_refs, link_refs):
 def select_route_and_run_insert_query(
     cursor, data: dict, operator_service_id: str, route_ref: str, link_refs: list
 ):
-    print("hello")
+
     routes = (
         None
         if data["TransXChange"].get("Routes", None) is None
@@ -795,14 +791,10 @@ def select_route_and_run_insert_query(
         else make_list(data["TransXChange"]["RouteSections"]["RouteSection"])
     )
 
-    print(routes)
-
     if routes is not None:
         route_section_refs = next(
             (item for item in routes if item["@id"] == route_ref), None
         ).get("RouteSectionRef", None)
-
-        print(route_section_refs)
 
         if route_section_refs is not None:
             tracks = collect_track_data(
