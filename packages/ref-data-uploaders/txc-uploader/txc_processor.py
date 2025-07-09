@@ -1,5 +1,6 @@
 import itertools
 from typing import Optional
+from pyproj import Transformer
 
 import aurora_data_api
 import xmltodict
@@ -145,6 +146,7 @@ def collect_journey_pattern_section_refs_and_info(raw_journey_patterns):
 
     return journey_patterns
 
+
 def safeget(dct, *keys):
     for key in keys:
         try:
@@ -152,6 +154,7 @@ def safeget(dct, *keys):
         except:
             return None
     return dct
+
 
 def collect_vehicle_journey(vehicle):
     vehicle_journey_info = {
@@ -685,16 +688,92 @@ def collect_track_data(route_sections, route_section_refs, link_refs):
                                                 "Translation", None
                                             )
                                             if translation is None:
-                                                longitude = location["Longitude"]
-                                                latitude = location["Latitude"]
+                                                longitude = location.get(
+                                                    "Longitude", None
+                                                )
+                                                latitude = location.get(
+                                                    "Latitude", None
+                                                )
+                                                if (
+                                                    longitude is not None
+                                                    and latitude is not None
+                                                ):
+                                                    longitude = location["Longitude"]
+                                                    latitude = location["Latitude"]
+                                                else:
+                                                    easting = location.get(
+                                                        "Easting", None
+                                                    )
+                                                    northing = location.get(
+                                                        "Northing", None
+                                                    )
+                                                    if (
+                                                        easting is not None
+                                                        and northing is not None
+                                                    ):
+                                                        transformer = (
+                                                            Transformer.from_crs(
+                                                                "EPSG:27700",
+                                                                "EPSG:4326",
+                                                                always_xy=True,
+                                                            )
+                                                        )
+                                                        longitude, latitude = map(
+                                                            lambda coord: round(
+                                                                coord, 9
+                                                            ),
+                                                            transformer.transform(
+                                                                easting, northing
+                                                            ),
+                                                        )
                                             else:
-                                                longitude = translation["Longitude"]
-                                                latitude = translation["Latitude"]
-                                            route = {
-                                                "longitude": longitude,
-                                                "latitude": latitude,
-                                            }
-                                            routes.append(route)
+                                                longitude = translation.get(
+                                                    "Longitude", None
+                                                )
+                                                latitude = translation.get(
+                                                    "Latitude", None
+                                                )
+                                                if (
+                                                    longitude is not None
+                                                    and latitude is not None
+                                                ):
+                                                    longitude = translation["Longitude"]
+                                                    latitude = translation["Latitude"]
+                                                else:
+                                                    easting = translation.get(
+                                                        "Easting", None
+                                                    )
+                                                    northing = translation.get(
+                                                        "Northing", None
+                                                    )
+                                                    if (
+                                                        easting is not None
+                                                        and northing is not None
+                                                    ):
+                                                        transformer = (
+                                                            Transformer.from_crs(
+                                                                "EPSG:27700",
+                                                                "EPSG:4326",
+                                                                always_xy=True,
+                                                            )
+                                                        )
+                                                        longitude, latitude = map(
+                                                            lambda coord: round(
+                                                                coord, 9
+                                                            ),
+                                                            transformer.transform(
+                                                                easting, northing
+                                                            ),
+                                                        )
+                                            if (
+                                                longitude is not None
+                                                and latitude is not None
+                                            ):
+                                                route = {
+                                                    "longitude": longitude,
+                                                    "latitude": latitude,
+                                                }
+                                                routes.append(route)
 
     clean_routes = [k for k, g in itertools.groupby(routes)]
 
@@ -704,6 +783,7 @@ def collect_track_data(route_sections, route_section_refs, link_refs):
 def select_route_and_run_insert_query(
     cursor, data: dict, operator_service_id: str, route_ref: str, link_refs: list
 ):
+    print("hello")
     routes = (
         None
         if data["TransXChange"].get("Routes", None) is None
@@ -715,16 +795,21 @@ def select_route_and_run_insert_query(
         else make_list(data["TransXChange"]["RouteSections"]["RouteSection"])
     )
 
+    print(routes)
+
     if routes is not None:
         route_section_refs = next(
             (item for item in routes if item["@id"] == route_ref), None
         ).get("RouteSectionRef", None)
 
+        print(route_section_refs)
+
         if route_section_refs is not None:
             tracks = collect_track_data(
                 route_sections, make_list(route_section_refs), link_refs
             )
-            insert_into_txc_tracks_table(cursor, tracks, operator_service_id)
+            if tracks:
+                insert_into_txc_tracks_table(cursor, tracks, operator_service_id)
 
 
 def format_vehicle_journeys(vehicle_journeys: list, line_id: str):
