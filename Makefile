@@ -1,6 +1,6 @@
 stage = $(shell cat ./.sst/stage)
 
-dev: install-deps wait-for-db start-sst
+dev: wait-for-db start-sst
 
 wait-for-db:
 	./scripts/wait_for_db.sh

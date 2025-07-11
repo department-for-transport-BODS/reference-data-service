@@ -649,6 +649,35 @@ def insert_into_txc_tracks_table(
     cursor.executemany(query, values)
 
 
+def extract_coordinates(location):
+    """Extract longitude and latitude from a location."""
+    translation = location.get("Translation", None)
+    if translation is None:
+        longitude = location.get("Longitude", None)
+        latitude = location.get("Latitude", None)
+        if longitude is None or latitude is None:
+            easting = location.get("Easting", None)
+            northing = location.get("Northing", None)
+            if easting is not None and northing is not None:
+                transformer = Transformer.from_crs("EPSG:27700", "EPSG:4326", always_xy=True)
+                longitude, latitude = map(
+                    lambda coord: round(coord, 9),
+                    transformer.transform(easting, northing),
+                )
+    else:
+        longitude = translation.get("Longitude", None)
+        latitude = translation.get("Latitude", None)
+        if longitude is None or latitude is None:
+            easting = translation.get("Easting", None)
+            northing = translation.get("Northing", None)
+            if easting is not None and northing is not None:
+                transformer = Transformer.from_crs("EPSG:27700", "EPSG:4326", always_xy=True)
+                longitude, latitude = map(
+                    lambda coord: round(coord, 9),
+                    transformer.transform(easting, northing),
+                )
+    return longitude, latitude
+
 def collect_track_data(route_sections, route_section_refs, link_refs):
     routes = []
 
@@ -684,96 +713,10 @@ def collect_track_data(route_sections, route_section_refs, link_refs):
                                     locations = make_list(mapping["Location"])
                                     if locations is not None:
                                         for location in locations:
-                                            translation = location.get(
-                                                "Translation", None
-                                            )
-                                            if translation is None:
-                                                longitude = location.get(
-                                                    "Longitude", None
-                                                )
-                                                latitude = location.get(
-                                                    "Latitude", None
-                                                )
-                                                if (
-                                                    longitude is not None
-                                                    and latitude is not None
-                                                ):
-                                                    longitude = location["Longitude"]
-                                                    latitude = location["Latitude"]
-                                                else:
-                                                    easting = location.get(
-                                                        "Easting", None
-                                                    )
-                                                    northing = location.get(
-                                                        "Northing", None
-                                                    )
-                                                    if (
-                                                        easting is not None
-                                                        and northing is not None
-                                                    ):
-                                                        transformer = (
-                                                            Transformer.from_crs(
-                                                                "EPSG:27700",
-                                                                "EPSG:4326",
-                                                                always_xy=True,
-                                                            )
-                                                        )
-                                                        longitude, latitude = map(
-                                                            lambda coord: round(
-                                                                coord, 9
-                                                            ),
-                                                            transformer.transform(
-                                                                easting, northing
-                                                            ),
-                                                        )
-                                            else:
-                                                longitude = translation.get(
-                                                    "Longitude", None
-                                                )
-                                                latitude = translation.get(
-                                                    "Latitude", None
-                                                )
-                                                if (
-                                                    longitude is not None
-                                                    and latitude is not None
-                                                ):
-                                                    longitude = translation["Longitude"]
-                                                    latitude = translation["Latitude"]
-                                                else:
-                                                    easting = translation.get(
-                                                        "Easting", None
-                                                    )
-                                                    northing = translation.get(
-                                                        "Northing", None
-                                                    )
-                                                    if (
-                                                        easting is not None
-                                                        and northing is not None
-                                                    ):
-                                                        transformer = (
-                                                            Transformer.from_crs(
-                                                                "EPSG:27700",
-                                                                "EPSG:4326",
-                                                                always_xy=True,
-                                                            )
-                                                        )
-                                                        longitude, latitude = map(
-                                                            lambda coord: round(
-                                                                coord, 9
-                                                            ),
-                                                            transformer.transform(
-                                                                easting, northing
-                                                            ),
-                                                        )
-                                            if (
-                                                longitude is not None
-                                                and latitude is not None
-                                            ):
-                                                route = {
-                                                    "longitude": longitude,
-                                                    "latitude": latitude,
-                                                }
-                                                routes.append(route)
+                                            longitude, latitude = extract_coordinates(location)
+                                            if longitude is not None and latitude is not None:
+                                                routes.append({"longitude": longitude, "latitude": latitude})
+
 
     clean_routes = [k for k, g in itertools.groupby(routes)]
 
