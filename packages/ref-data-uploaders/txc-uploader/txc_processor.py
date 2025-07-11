@@ -636,21 +636,24 @@ def check_file_has_usable_data(data: dict, service: dict) -> bool:
 def insert_into_txc_tracks_table(
     cursor: aurora_data_api.AuroraDataAPICursor, tracks, operator_service_id
 ):
-    values = [
-        {
-            "operator_service_id": operator_service_id,
-            "longitude": track["longitude"],
-            "latitude": track["latitude"],
-        }
-        for track in tracks
-    ]
+    batched_tracks = [tracks[i : i + 200] for i in range(0, len(tracks), 200)]
 
-    query = """INSERT INTO tracks_new (operatorServiceId, longitude, latitude) VALUES (:operator_service_id, :longitude, :latitude)"""
-    cursor.executemany(query, values)
+    for batch in batched_tracks:
+        values = [
+            {
+                "operator_service_id": operator_service_id,
+                "longitude": track["longitude"],
+                "latitude": track["latitude"],
+            }
+            for track in batch
+        ]
+
+        query = """INSERT INTO tracks_new (operatorServiceId, longitude, latitude) VALUES (:operator_service_id, :longitude, :latitude)"""
+        cursor.executemany(query, values)
 
 
 def extract_coordinates(location):
-    """Extract longitude and latitude from a location."""
+    """Extract longitude and latitude from a location or translation."""
     translation = location.get("Translation", None)
     if translation is None:
         longitude = location.get("Longitude", None)
@@ -659,7 +662,9 @@ def extract_coordinates(location):
             easting = location.get("Easting", None)
             northing = location.get("Northing", None)
             if easting is not None and northing is not None:
-                transformer = Transformer.from_crs("EPSG:27700", "EPSG:4326", always_xy=True)
+                transformer = Transformer.from_crs(
+                    "EPSG:27700", "EPSG:4326", always_xy=True
+                )
                 longitude, latitude = map(
                     lambda coord: round(coord, 9),
                     transformer.transform(easting, northing),
@@ -671,12 +676,15 @@ def extract_coordinates(location):
             easting = translation.get("Easting", None)
             northing = translation.get("Northing", None)
             if easting is not None and northing is not None:
-                transformer = Transformer.from_crs("EPSG:27700", "EPSG:4326", always_xy=True)
+                transformer = Transformer.from_crs(
+                    "EPSG:27700", "EPSG:4326", always_xy=True
+                )
                 longitude, latitude = map(
                     lambda coord: round(coord, 9),
                     transformer.transform(easting, northing),
                 )
     return longitude, latitude
+
 
 def collect_track_data(route_sections, route_section_refs, link_refs):
     routes = []
@@ -713,10 +721,19 @@ def collect_track_data(route_sections, route_section_refs, link_refs):
                                     locations = make_list(mapping["Location"])
                                     if locations is not None:
                                         for location in locations:
-                                            longitude, latitude = extract_coordinates(location)
-                                            if longitude is not None and latitude is not None:
-                                                routes.append({"longitude": longitude, "latitude": latitude})
-
+                                            longitude, latitude = extract_coordinates(
+                                                location
+                                            )
+                                            if (
+                                                longitude is not None
+                                                and latitude is not None
+                                            ):
+                                                routes.append(
+                                                    {
+                                                        "longitude": longitude,
+                                                        "latitude": latitude,
+                                                    }
+                                                )
 
     clean_routes = [k for k, g in itertools.groupby(routes)]
 
@@ -737,8 +754,6 @@ def select_route_and_run_insert_query(
         if data["TransXChange"].get("RouteSections", None) is None
         else make_list(data["TransXChange"]["RouteSections"]["RouteSection"])
     )
-
-
 
     if routes is not None:
         route_section_refs = next(
