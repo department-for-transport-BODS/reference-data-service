@@ -283,7 +283,7 @@ class TestDataCollectionFunctionality:
 
 
 class TestCollectTrackData:
-    def test_omit_easting_northing_to_long_lat_when_missing(self):
+    def test_omit_easting_northing_from_tracks(self):
         route_sections = [
             {
                 "@id": "section1",
