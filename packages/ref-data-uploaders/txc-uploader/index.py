@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 db_connection = aurora_data_api.connect(
     aurora_cluster_arn=os.getenv("CLUSTER_ARN"),
     database=os.getenv("DATABASE_NAME"),
-    secret_arn=os.getenv("DATABASE_SECRET_ARN")
+    secret_arn=os.getenv("DATABASE_SECRET_ARN"),
 )
 
 
