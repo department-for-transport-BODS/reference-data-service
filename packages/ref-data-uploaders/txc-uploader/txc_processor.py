@@ -1,6 +1,5 @@
 import itertools
 from typing import Optional
-from pyproj import Transformer
 
 import aurora_data_api
 import xmltodict
@@ -658,31 +657,9 @@ def extract_coordinates(location):
     if translation is None:
         longitude = location.get("Longitude", None)
         latitude = location.get("Latitude", None)
-        if longitude is None or latitude is None:
-            easting = location.get("Easting", None)
-            northing = location.get("Northing", None)
-            if easting is not None and northing is not None:
-                transformer = Transformer.from_crs(
-                    "EPSG:27700", "EPSG:4326", always_xy=True
-                )
-                longitude, latitude = map(
-                    lambda coord: round(coord, 9),
-                    transformer.transform(easting, northing),
-                )
     else:
         longitude = translation.get("Longitude", None)
         latitude = translation.get("Latitude", None)
-        if longitude is None or latitude is None:
-            easting = translation.get("Easting", None)
-            northing = translation.get("Northing", None)
-            if easting is not None and northing is not None:
-                transformer = Transformer.from_crs(
-                    "EPSG:27700", "EPSG:4326", always_xy=True
-                )
-                longitude, latitude = map(
-                    lambda coord: round(coord, 9),
-                    transformer.transform(easting, northing),
-                )
     return longitude, latitude
 
 
