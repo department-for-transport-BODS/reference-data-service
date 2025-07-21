@@ -1,7 +1,6 @@
 import os
 from unittest.mock import ANY, patch, MagicMock
 from aurora_data_api import AuroraDataAPICursor
-from pyproj import Transformer
 
 
 import boto3
@@ -284,7 +283,7 @@ class TestDataCollectionFunctionality:
 
 
 class TestCollectTrackData:
-    def test_convert_easting_northing_to_long_lat_when_missing(self):
+    def test_omit_easting_northing_from_tracks(self):
         route_sections = [
             {
                 "@id": "section1",
@@ -318,9 +317,7 @@ class TestCollectTrackData:
         route_section_refs = ["section1"]
         link_refs = ["link1"]
         expected_routes = [
-            {"longitude": -0.554729502, "latitude": 51.689858772},
             {"longitude": 1.1111, "latitude": 2.2222},
-            {"latitude": 52.561062301, "longitude": 0.949152044},
             {"longitude": 3.3333, "latitude": 4.4444},
         ]
 
@@ -360,7 +357,6 @@ class TestCollectTrackData:
         route_section_refs = ["section1"]
         link_refs = ["link1"]
         expected_routes = [
-            {"longitude": -0.554729502, "latitude": 51.689858772},
             {"longitude": 1.1111, "latitude": 2.2222},
         ]
 
